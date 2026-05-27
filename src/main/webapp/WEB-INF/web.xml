@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <display-name>SmartNotes AI</display-name>
+
+    <!-- ── UTF-8 Character Encoding Filter ──────────────────────────── -->
+    <filter>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <filter-class>com.smartnotes.servlet.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- ── Servlet Declarations ─────────────────────────────────────── -->
+
+    <servlet>
+        <servlet-name>DashboardServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.DashboardServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardServlet</servlet-name>
+        <url-pattern>/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AddNoteServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.AddNoteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AddNoteServlet</servlet-name>
+        <url-pattern>/add</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>UpdateNoteServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.UpdateNoteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UpdateNoteServlet</servlet-name>
+        <url-pattern>/update</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DeleteNoteServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.DeleteNoteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DeleteNoteServlet</servlet-name>
+        <url-pattern>/delete</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>SearchNoteServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.SearchNoteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SearchNoteServlet</servlet-name>
+        <url-pattern>/search</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>TranslateServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.TranslateServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TranslateServlet</servlet-name>
+        <url-pattern>/translate</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>SummarizeServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.SummarizeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>SummarizeServlet</servlet-name>
+        <url-pattern>/summarize</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>GenerateStudyNotesServlet</servlet-name>
+        <servlet-class>com.smartnotes.servlet.GenerateStudyNotesServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>GenerateStudyNotesServlet</servlet-name>
+        <url-pattern>/generate-study-notes</url-pattern>
+    </servlet-mapping>
+
+    <!-- ── Welcome File ─────────────────────────────────────────────── -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+</web-app>

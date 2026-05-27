@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    container_name: smartnotes-app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=smartnotes
+      - DB_USER=root
+      - DB_PASSWORD=root123
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - smartnotes-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: smartnotes-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: smartnotes
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - smartnotes-network
+
+volumes:
+  mysql_data:
+
+networks:
+  smartnotes-network:
+    driver: bridge
