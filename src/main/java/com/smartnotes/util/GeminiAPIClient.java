@@ -7,9 +7,14 @@ import com.google.gson.JsonParser;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  * Client for the Google Gemini generative-AI API.
@@ -30,6 +35,10 @@ public class GeminiAPIClient {
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build();
+
+    // Redis Configuration
+    private static final String REDIS_HOST = System.getenv("REDIS_HOST") != null ? System.getenv("REDIS_HOST") : "localhost";
+    private static final JedisPool JEDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST, 6379);
 
     /**
      * Summarises the given text into key bullet points.
@@ -79,6 +88,19 @@ public class GeminiAPIClient {
             return "Error: GEMINI_API_KEY environment variable is not set. Please configure it to use AI features.";
         }
 
+        String cacheKey = generateCacheKey(prompt);
+        
+        // 1. Check Redis Cache First
+        try (Jedis jedis = JEDIS_POOL.getResource()) {
+            String cachedResponse = jedis.get(cacheKey);
+            if (cachedResponse != null) {
+                LOGGER.info("Cache hit! Returning summary from Redis.");
+                return cachedResponse;
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Redis cache error (read): " + e.getMessage());
+        }
+
         try {
             // Build the request body
             JsonObject textPart = new JsonObject();
@@ -109,7 +131,19 @@ public class GeminiAPIClient {
                 }
 
                 String responseBody = response.body() != null ? response.body().string() : "";
-                return extractText(responseBody);
+                String extractedText = extractText(responseBody);
+                
+                // 2. Save successful response to Redis Cache (expire in 24 hours)
+                if (!extractedText.startsWith("Error:")) {
+                    try (Jedis jedis = JEDIS_POOL.getResource()) {
+                        jedis.setex(cacheKey, 86400, extractedText);
+                        LOGGER.info("Saved AI response to Redis Cache.");
+                    } catch (Exception e) {
+                        LOGGER.warning("Redis cache error (write): " + e.getMessage());
+                    }
+                }
+                
+                return extractedText;
             }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error calling Gemini API", e);
@@ -141,6 +175,27 @@ public class GeminiAPIClient {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error parsing Gemini response: " + responseBody, e);
             return "Error: Could not parse AI response.";
+        }
+    }
+
+    /**
+     * Generates a SHA-256 hash of the prompt to use as a Redis key.
+     */
+    private String generateCacheKey(String prompt) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(prompt.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder(2 * hash.length);
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return "gemini_cache:" + hexString.toString();
+        } catch (Exception e) {
+            return "gemini_cache:" + prompt.hashCode();
         }
     }
 }

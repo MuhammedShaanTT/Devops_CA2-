@@ -11,6 +11,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=root123
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_HOST=redis
     depends_on:
       mysql:
         condition: service_healthy
@@ -39,8 +40,44 @@ services:
     networks:
       - smartnotes-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: smartnotes-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - smartnotes-network
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: smartnotes-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - smartnotes-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartnotes-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - smartnotes-network
+
 volumes:
   mysql_data:
+  grafana_data:
 
 networks:
   smartnotes-network:
