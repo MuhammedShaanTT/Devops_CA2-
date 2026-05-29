@@ -137,6 +137,11 @@
                         <span class="material-icons">school</span>
                         <span>Study Notes</span>
                     </button>
+
+                    <button type="button" class="btn btn-ai" onclick="generateFlashcards(${note.id})" title="Generate AI Flashcards">
+                        <span class="material-icons">style</span>
+                        <span>Flashcards</span>
+                    </button>
                 </div>
 
                 <div class="toolbar-right">
@@ -183,6 +188,45 @@
         </div>
         <div class="modal-footer-custom">
             <button class="btn btn-outline" onclick="hideAiModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ FLASHCARD MODAL ═══════════════ -->
+<div class="modal-backdrop-custom" id="flashcard-modal">
+    <div class="modal-dialog-custom flashcard-dialog">
+        <div class="modal-header-custom">
+            <h3>
+                <span class="material-icons">style</span>
+                <span>AI Study Flashcards</span>
+            </h3>
+            <button class="modal-close-btn" onclick="hideFlashcardModal()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body-custom flashcard-body" id="flashcard-container">
+            <div class="flashcard-scene" onclick="flipCard()">
+                <div class="flashcard" id="flashcard-element">
+                    <div class="flashcard-face flashcard-front">
+                        <div class="flashcard-label">QUESTION</div>
+                        <div class="flashcard-content" id="fc-question">Loading...</div>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <div class="flashcard-label">ANSWER</div>
+                        <div class="flashcard-content" id="fc-answer">Please wait...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flashcard-progress" id="fc-progress">1 / 1</div>
+        </div>
+        <div class="modal-footer-custom flashcard-controls">
+            <button class="btn btn-outline" onclick="prevFlashcard()">
+                <span class="material-icons">arrow_back</span> Prev
+            </button>
+            <button class="btn btn-outline" onclick="flipCard()">Flip Card</button>
+            <button class="btn btn-primary" onclick="nextFlashcard()">
+                Next <span class="material-icons">arrow_forward</span>
+            </button>
         </div>
     </div>
 </div>

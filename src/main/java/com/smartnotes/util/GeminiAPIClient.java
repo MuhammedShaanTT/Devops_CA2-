@@ -74,6 +74,41 @@ public class GeminiAPIClient {
         return callGemini(prompt);
     }
 
+    /**
+     * Generates flashcards based on the provided text.
+     * Instructs the AI to return ONLY a JSON array of objects with "question" and "answer" keys.
+     * 
+     * @param text the note text to turn into flashcards
+     * @return JSON string of flashcards or an error message
+     */
+    public String generateFlashcards(String text) {
+        String prompt = "You are an expert tutor. Create a comprehensive set of flashcards covering all the key concepts, definitions, and topics in the following text. \n\n" +
+                "CRITICAL INSTRUCTION: You MUST return the result as a raw JSON array of objects. Do not include any markdown formatting (like ```json), do not include any introductory or concluding text. ONLY output the raw JSON array.\n\n" +
+                "Format requirement:\n" +
+                "[\n" +
+                "  {\"question\": \"What is...\", \"answer\": \"It is...\"},\n" +
+                "  {\"question\": \"...\", \"answer\": \"...\"}\n" +
+                "]\n\n" +
+                "Text:\n" + text;
+        String result = callGemini(prompt);
+        
+        // Sometimes the AI still wraps the output in markdown blocks despite instructions.
+        // We must strip them so the frontend can parse the raw JSON.
+        if (result != null && !result.startsWith("Error:")) {
+            result = result.trim();
+            if (result.startsWith("```json")) {
+                result = result.substring(7);
+            } else if (result.startsWith("```")) {
+                result = result.substring(3);
+            }
+            if (result.endsWith("```")) {
+                result = result.substring(0, result.length() - 3);
+            }
+            result = result.trim();
+        }
+        return result;
+    }
+
     // ── Internal ────────────────────────────────────────────────────────
 
     /**

@@ -456,3 +456,128 @@
   };
 
 })();
+
+
+/* =============================================
+   AI Flashcard System
+   ============================================= */
+
+(function() {
+  let flashcards = [];
+  let currentIndex = 0;
+  let isFlipped = false;
+
+  window.generateFlashcards = function(noteId) {
+    if (!noteId) {
+      showToast("Cannot generate flashcards without saving the note first.", "error");
+      return;
+    }
+
+    var modal = document.getElementById("flashcard-modal");
+    if (modal) {
+      modal.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+
+    // Reset UI to loading state
+    flashcards = [];
+    currentIndex = 0;
+    isFlipped = false;
+    document.getElementById("flashcard-element").classList.remove("is-flipped");
+    document.getElementById("fc-question").innerHTML = "<div class=\"spinner\"></div><p>AI is analyzing your note...</p>";
+    document.getElementById("fc-answer").textContent = "Please wait...";
+    document.getElementById("fc-progress").textContent = "- / -";
+
+    // Call Backend API
+    var formData = new URLSearchParams();
+    formData.append("noteId", noteId);
+
+    fetch(CTX + "/api/flashcards", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString()
+    })
+    .then(function(response) {
+      if (!response.ok) throw new Error("Server returned " + response.status);
+      return response.json();
+    })
+    .then(function(data) {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      // If it returned a single string or object that is not an array, try to parse it
+      if (typeof data === "string") {
+        try { data = JSON.parse(data); } catch(e) {}
+      }
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error("AI did not return a valid list of flashcards.");
+      }
+
+      flashcards = data;
+      renderCurrentFlashcard();
+      showToast("Generated " + flashcards.length + " flashcards!", "success");
+    })
+    .catch(function(err) {
+      document.getElementById("fc-question").textContent = "Error: " + err.message;
+      document.getElementById("fc-answer").textContent = "Could not generate flashcards.";
+    });
+  };
+
+  window.renderCurrentFlashcard = function() {
+    if (flashcards.length === 0) return;
+    
+    isFlipped = false;
+    document.getElementById("flashcard-element").classList.remove("is-flipped");
+    
+    var currentCard = flashcards[currentIndex];
+    
+    // Wait for the flip animation to finish before updating text (if it was flipped)
+    setTimeout(function() {
+      document.getElementById("fc-question").textContent = currentCard.question || "Unknown Question";
+      document.getElementById("fc-answer").textContent = currentCard.answer || "Unknown Answer";
+      document.getElementById("fc-progress").textContent = (currentIndex + 1) + " / " + flashcards.length;
+    }, 150);
+  };
+
+  window.flipCard = function() {
+    if (flashcards.length === 0) return;
+    isFlipped = !isFlipped;
+    var card = document.getElementById("flashcard-element");
+    if (isFlipped) {
+      card.classList.add("is-flipped");
+    } else {
+      card.classList.remove("is-flipped");
+    }
+  };
+
+  window.nextFlashcard = function() {
+    if (flashcards.length === 0) return;
+    if (currentIndex < flashcards.length - 1) {
+      currentIndex++;
+      renderCurrentFlashcard();
+    } else {
+      // Loop back to start
+      currentIndex = 0;
+      renderCurrentFlashcard();
+      showToast("Restarting deck", "info");
+    }
+  };
+
+  window.prevFlashcard = function() {
+    if (flashcards.length === 0) return;
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderCurrentFlashcard();
+    }
+  };
+
+  window.hideFlashcardModal = function() {
+    var modal = document.getElementById("flashcard-modal");
+    if (modal) {
+      modal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+  };
+})();
+
