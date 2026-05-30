@@ -463,6 +463,7 @@
    ============================================= */
 
 (function() {
+  var CTX = '';  // ROOT deployment context path
   let flashcards = [];
   let currentIndex = 0;
   let isFlipped = false;
