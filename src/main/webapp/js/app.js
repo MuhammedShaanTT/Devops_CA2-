@@ -492,12 +492,17 @@
     var formData = new URLSearchParams();
     formData.append("noteId", noteId);
 
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
+
     fetch(CTX + "/api/flashcards", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString()
+      body: formData.toString(),
+      signal: controller.signal
     })
     .then(function(response) {
+      clearTimeout(timeoutId);
       if (!response.ok) throw new Error("Server returned " + response.status);
       return response.json();
     })
@@ -519,8 +524,11 @@
       showToast("Generated " + flashcards.length + " flashcards!", "success");
     })
     .catch(function(err) {
-      document.getElementById("fc-question").textContent = "Error: " + err.message;
+      clearTimeout(timeoutId);
+      var msg = err.name === "AbortError" ? "Request timed out. Please try again." : err.message;
+      document.getElementById("fc-question").textContent = "Error: " + msg;
       document.getElementById("fc-answer").textContent = "Could not generate flashcards.";
+      document.getElementById("fc-progress").textContent = "- / -";
     });
   };
 
